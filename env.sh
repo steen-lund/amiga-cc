@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# Set path to the current working directory
-PROJECT_PATH="$PWD"
+# Set path to the vbcc installation
+VBCC_PATH="/opt/vbcc"
 
 # Check if the shell is bash or zsh
 if [ $SHELL = "/bin/bash" ] || [ $SHELL = "/usr/bin/bash" ]; then
@@ -14,14 +14,20 @@ else
 fi
 
 # Check if entry exist and add it
-if ! grep -q "export VBCC=\"$PROJECT_PATH/vbcc\"" "$SHELL_RC"; then
-  echo "export VBCC=\"$PROJECT_PATH/vbcc\"" >> "$SHELL_RC"
+if ! grep -q "export VBCC=\"$VBCC_PATH\"" "$SHELL_RC"; then
+  echo "export VBCC=\"$VBCC_PATH\"" >> "$SHELL_RC"
   echo "Added VBCC environment variable to $SHELL_RC"
 fi
 
 if ! grep -q "export PATH=\"\$VBCC/bin:\$PATH\"" "$SHELL_RC"; then
   echo "export PATH=\"\$VBCC/bin:\$PATH\"" >> "$SHELL_RC"
   echo "Added VBCC/bin to PATH in $SHELL_RC"
+fi
+
+if ! grep -q "export NDK_INCLUDES=\"\$VBCC/NDK_3.2/Include_H\"" "$SHELL_RC"; then
+  echo "export NDK_INCLUDES=\"\$VBCC/NDK_3.2/Include_H\"" >> "$SHELL_RC"
+  echo "Added NDK_3.2/Include_H to NDK_INCLUDES in $SHELL_RC"
+  echo "Use -I\$(NDK_INCLUDES) to include the NDK headers in your compiler flags"
 fi
 
 echo "Environment configuration completed."

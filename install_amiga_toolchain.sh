@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# Set the project path to the current working directory
-PROJECT_PATH="$PWD"
+# Set the installation path
+PROJECT_PATH="/opt/vbcc"
 
 if ! command -v wget &> /dev/null
 then
@@ -15,10 +15,11 @@ then
   exit
 fi
 
-mkdir -p "$PROJECT_PATH/vbcc_tools"
-mkdir -p "$PROJECT_PATH/vbcc"
+TEMP_BUILD_DIR="/tmp/vbcc_build_$$"
+mkdir -p "$TEMP_BUILD_DIR"
+mkdir -p "$PROJECT_PATH"
 
-cd "$PROJECT_PATH/vbcc_tools"
+cd "$TEMP_BUILD_DIR"
 
 if ! wget -c http://sun.hasenbraten.de/vasm/release/vasm.tar.gz; then
   echo "Failed to download vasm.tar.gz"
@@ -40,6 +41,11 @@ if ! wget -c http://phoenix.owl.de/vbcc/current/vbcc_target_m68k-amigaos.lha; th
   exit 1
 fi
 
+if ! wget -c http://phoenix.owl.de/vbcc/current/vbcc_target_ppc-warpos.lha; then
+  echo "Failed to download vbcc_target_ppc-warpos.lha"
+  exit 1
+fi
+
 if ! wget -c http://phoenix.owl.de/vbcc/current/vbcc_unix_config.tar.gz; then
   echo "Failed to download vbcc_unix_config.tar.gz"
   exit 1
@@ -52,26 +58,54 @@ if [ ! -d bin ]; then
   mkdir bin
 fi
 
+# Build for m68k
 make TARGET=m68k
-cp -r bin "$PROJECT_PATH/vbcc/"
+
+# Build for PPC
+make TARGET=ppc
+
+cp -r bin "$PROJECT_PATH/"
+
+# Copy PPC compiler components
+#echo "Installing PPC compiler components..."
+#if [ -f bin/vbccppc ]; then
+#  cp bin/vbccppc "$PROJECT_PATH/bin/"
+#  echo "  - Installed vbccppc (PPC code generator)"
+#else
+#  echo "  WARNING: vbccppc not found!"
+#fi
+
+#if [ -f bin/vscppc ]; then
+#  cp bin/vscppc "$PROJECT_PATH/bin/"
+#  echo "  - Installed vscppc (PPC scheduler/optimizer)"
+#else
+#  echo "  WARNING: vscppc not found!"
+#fi
 
 cd ..
 
 lha x vbcc_target_m68k-amigaos.lha
-cp -r vbcc_target_m68k-amigaos/* "$PROJECT_PATH/vbcc/"
+cp -r vbcc_target_m68k-amigaos/* "$PROJECT_PATH/"
 
-cd "$PROJECT_PATH/vbcc"
-tar zxvf "$PROJECT_PATH/vbcc_tools/vbcc_unix_config.tar.gz"
+lha x vbcc_target_ppc-warpos.lha
+cp -r vbcc_target_ppc-warpos/* "$PROJECT_PATH/"
 
-export VBCC="$PROJECT_PATH/vbcc"
+cd "$PROJECT_PATH"
+tar zxvf "$TEMP_BUILD_DIR/vbcc_unix_config.tar.gz"
+
+export VBCC="$PROJECT_PATH"
 export PATH="$VBCC/bin:$PATH"
 
-cd "$PROJECT_PATH/vbcc_tools"
+cd "$TEMP_BUILD_DIR"
 
 tar zxvf vasm.tar.gz
 cd vasm
 make CPU=m68k SYNTAX=mot
 cp vasmm68k_mot vobjdump "$VBCC/bin"
+
+# Build vasm for ppc as well
+make CPU=ppc SYNTAX=std
+cp vasmppc_std "$VBCC/bin"
 
 cd ..
 
@@ -95,7 +129,13 @@ fi
 
 lha x NDK3.2.lha
 
-cd ..
-cp -r $VBCC/NDK_3.2/Include_[Hh]/* "$VBCC/targets/m68k-amigaos/include"
+rm -rf "$TEMP_BUILD_DIR"
 
-rm -rf "$PROJECT_PATH/vbcc_tools/"
+# Set proper permissions for system-wide installation
+echo "Setting permissions for system-wide access..."
+chmod -R a+rX "$PROJECT_PATH"
+chmod -R 755 "$PROJECT_PATH/bin"
+
+echo "VBCC toolchain installed successfully to $PROJECT_PATH"
+echo "To use the toolchain, run: export VBCC=$PROJECT_PATH && export PATH=\$VBCC/bin:\$PATH"
+echo "To add the environment variables to your shell, run: source env.sh"
