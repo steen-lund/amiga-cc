@@ -1,0 +1,21 @@
+--- compiler-specific.h.orig	2025-10-20 23:18:59
++++ compiler-specific.h	2025-10-20 23:20:36
+@@ -47,6 +47,7 @@
+  * register and the parameter are used is changed. This is the case for
+  * the GNU 'C' compiler.
+  */
++#ifndef __PPC__
+ #ifndef __REG__
+ #if defined(__SASC) || defined(__MAXON__) || defined(__STORM__)
+ #define __REG__(r, p) register __ ## r p
+@@ -60,7 +61,9 @@
+ #define __REG__(r, p) p
+ #endif
+ #endif /* __REG__ */
+-
++#else /* __PPC__ */
++#define __REG__(r, p) p
++#endif /* __PPC__ */
+ /*
+  * Stack based calling conventions
+  */
