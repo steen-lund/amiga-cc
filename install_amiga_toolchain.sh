@@ -1,5 +1,15 @@
 #!/bin/sh
 
+# Check if running as root/sudo
+if [ "$(id -u)" -ne 0 ]; then
+  echo "Error: This script must be run with sudo"
+  echo "Usage: sudo ./install_amiga_toolchain.sh"
+  exit 1
+fi
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 # Set the installation path
 PROJECT_PATH="/opt/vbcc"
 
@@ -137,17 +147,23 @@ lha x NDK3.2.lha
 
 # Apply WarpOS/PPC patch to compiler-specific.h
 echo "Applying WarpOS/PPC patch to NDK compiler-specific.h..."
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-if [ -f "$SCRIPT_DIR/compiler-specific.h.patch" ]; then
-  cd Include_H/clib
-  if patch -p0 < "$SCRIPT_DIR/compiler-specific.h.patch"; then
-    echo "Patch applied successfully"
+PATCH_FILE="$SCRIPT_DIR/compiler-specific.h.patch"
+if [ -f "$PATCH_FILE" ]; then
+  echo "Found patch file: $PATCH_FILE"
+  if [ -f Include_H/clib/compiler-specific.h ]; then
+    cd Include_H/clib
+    echo "Applying patch to $(pwd)/compiler-specific.h"
+    if patch -p0 < "$PATCH_FILE" 2>&1; then
+      echo "Patch applied successfully"
+    else
+      echo "WARNING: Failed to apply compiler-specific.h patch"
+    fi
+    cd ../..
   else
-    echo "WARNING: Failed to apply compiler-specific.h patch"
+    echo "WARNING: Include_H/clib/compiler-specific.h not found"
   fi
-  cd ../..
 else
-  echo "WARNING: compiler-specific.h.patch not found in $SCRIPT_DIR"
+  echo "WARNING: compiler-specific.h.patch not found at $PATCH_FILE"
 fi
 
 rm -rf "$TEMP_BUILD_DIR"
