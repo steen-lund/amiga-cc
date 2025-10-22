@@ -82,22 +82,6 @@ make TARGET=ppc
 
 cp -r bin "$PROJECT_PATH/"
 
-# Copy PPC compiler components
-#echo "Installing PPC compiler components..."
-#if [ -f bin/vbccppc ]; then
-#  cp bin/vbccppc "$PROJECT_PATH/bin/"
-#  echo "  - Installed vbccppc (PPC code generator)"
-#else
-#  echo "  WARNING: vbccppc not found!"
-#fi
-
-#if [ -f bin/vscppc ]; then
-#  cp bin/vscppc "$PROJECT_PATH/bin/"
-#  echo "  - Installed vscppc (PPC scheduler/optimizer)"
-#else
-#  echo "  WARNING: vscppc not found!"
-#fi
-
 cd ..
 
 lha x vbcc_target_m68k-amigaos.lha
@@ -317,6 +301,36 @@ fi
 # Clean up P96Develop archive and extracted files
 rm -f P96Develop.lha
 rm -rf Picasso96Develop
+
+# Download and install WarpUP V51 developer files
+echo "Downloading WarpUP V51 developer files from aminet..."
+cd "$PROJECT_PATH"
+if ! wget -c http://aminet.net/misc/os/WarpUP_V51Upd.lha; then
+  echo "Failed to download WarpUP_V51Upd.lha"
+  exit 1
+fi
+
+echo "Extracting WarpUP V51 developer files..."
+lha x WarpUP_V51Upd.lha
+
+# Install WarpUP includes
+if [ -d WarpUP-WarpOS/include ]; then
+  echo "Installing WarpUP includes to $PROJECT_PATH/local/Include_h..."
+  cp -r WarpUP-WarpOS/include/* "$PROJECT_PATH/local/Include_h/"
+fi
+
+# Install WarpUP LVO files
+if [ -d WarpUP-WarpOS/LVO ]; then
+  echo "Installing WarpUP LVO files to $PROJECT_PATH/local/Include_h/LVO/..."
+  mkdir -p "$PROJECT_PATH/local/Include_h/LVO"
+  cp -r WarpUP-WarpOS/LVO/* "$PROJECT_PATH/local/Include_h/LVO/"
+fi
+
+# Clean up WarpUP archive and extracted files
+rm -f WarpUP_V51Upd.lha
+rm -rf WarpUP-WarpOS
+rm -rf Install*WarpUP*.info
+rm -f "WarpUP Install-Script"
 
 # Set proper permissions for system-wide installation
 echo "Setting permissions for system-wide access..."
