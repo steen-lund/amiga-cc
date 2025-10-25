@@ -10,6 +10,8 @@ fi
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# TOOLCHAIN SECTION
+
 # Set the installation path
 PROJECT_PATH="/opt/vbcc"
 
@@ -37,6 +39,7 @@ mkdir -p "$PROJECT_PATH"
 
 cd "$TEMP_BUILD_DIR"
 
+# Download packaged to temp dir
 if ! wget -c http://sun.hasenbraten.de/vasm/release/vasm.tar.gz; then
   echo "Failed to download vasm.tar.gz"
   exit 1
@@ -47,8 +50,8 @@ if ! wget -c http://sun.hasenbraten.de/vlink/release/vlink.tar.gz; then
   exit 1
 fi
 
-if ! wget -c http://www.ibaug.de/vbcc/vbcc.tar.gz; then
-  echo "Failed to download vbcc.tar.gz"
+if ! git clone https://github.com/steen-lund/vbcc.git; then
+  echo "Failed to clone vbcc repository"
   exit 1
 fi
 
@@ -67,39 +70,38 @@ if ! wget -c http://phoenix.owl.de/vbcc/current/vbcc_unix_config.tar.gz; then
   exit 1
 fi
 
-tar zxvf vbcc.tar.gz
+if ! wget -c https://aminet.net/dev/c/vbcc_PosixLib.lha; then
+  echo "Failed to download vbcc_PosixLib.lha"
+  exit 1
+fi
+
+# Enter vbcc clone
 cd vbcc
 
 if [ ! -d bin ]; then
   mkdir bin
 fi
 
-# Build for m68k
+# Build vbcc compiler(s) for m68k
 make TARGET=m68k
 
-# Build for PPC
+# Build vbcc compiler(s) for PPC
 make TARGET=ppc
 
+# Copy compiled binaries to PROJECT PATH
 cp -r bin "$PROJECT_PATH/"
 
+# Exit vbcc clone, we are now back in TEMP_BUILD_DIR
 cd ..
-
-lha x vbcc_target_m68k-amigaos.lha
-cp -r vbcc_target_m68k-amigaos/* "$PROJECT_PATH/"
-
-lha x vbcc_target_ppc-warpos.lha
-cp -r vbcc_target_ppc-warpos/* "$PROJECT_PATH/"
-
-cd "$PROJECT_PATH"
-tar zxvf "$TEMP_BUILD_DIR/vbcc_unix_config.tar.gz"
 
 export VBCC="$PROJECT_PATH"
 export PATH="$VBCC/bin:$PATH"
 
-cd "$TEMP_BUILD_DIR"
-
+# Extract and build vasm
 tar zxvf vasm.tar.gz
 cd vasm
+
+# Build vasm for m68k
 make CPU=m68k SYNTAX=mot
 cp vasmm68k_mot vobjdump "$VBCC/bin"
 
@@ -107,13 +109,44 @@ cp vasmm68k_mot vobjdump "$VBCC/bin"
 make CPU=ppc SYNTAX=std
 cp vasmppc_std "$VBCC/bin"
 
+# Exit vasm folder, we are now back in the TEMP_BUILD_DIR
 cd ..
 
+# Extract and build vlink
 tar zxvf vlink.tar.gz
 cd vlink
 make
 cp vlink "$VBCC/bin"
+# Exit vlink folder, we are now back in the TEMP_BUILD_DIR
+cd ..
 
+# Install the target configs, includes and libs for m68k Amiga OS
+lha x vbcc_target_m68k-amigaos.lha
+cp -r vbcc_target_m68k-amigaos/* "$PROJECT_PATH/"
+
+# Install the target configs, includes and libs for PPC WarpOS
+lha x vbcc_target_ppc-warpos.lha
+cp -r vbcc_target_ppc-warpos/* "$PROJECT_PATH/"
+
+# This actually overwrites all configs with config files adapter for a "unix" environment
+# i.e no Amiga path name conventions and relies on VBCC env var
+cd "$PROJECT_PATH"
+tar zxvf "$TEMP_BUILD_DIR/vbcc_unix_config.tar.gz"
+cd "$TEMP_BUILD_DIR"
+
+# Install the posix support for vbcc
+lha x vbcc_PosixLib.lha
+mkdir "$PROJECT_PATH/targets/posix"
+cd vbcc_PosixLib
+cp -r include "$PROJECT_PATH/targets/posix"
+cp AmigaOS3/posix.lib "$PROJECT_PATH/targets/m68k_amigaos/lib/posix.lib"
+cp WarpOS/posix.lib "$PROJECT_PATH/targets/ppc_warpos/lib/posix.lib"
+cp "$SCRIPT_DIR/posix_configs/*" "$PROJECT_PATH/config/"
+cd ..
+
+# END TOOLCHAIN
+
+# NDK SECTION
 cd "$VBCC"
 
 if [ ! -d NDK_3.2 ]; then
@@ -149,6 +182,8 @@ if [ -f "$PATCH_FILE" ]; then
 else
   echo "WARNING: compiler-specific.h.patch not found at $PATCH_FILE"
 fi
+
+#END NDK SECTION
 
 rm -rf "$TEMP_BUILD_DIR"
 
@@ -207,30 +242,6 @@ fi
 # Clean up SDI headers archive and extracted files
 rm -f SDI_headers.lha
 rm -rf SDI
-
-# Download and compile fd2pragma tool from source
-echo "Cloning fd2pragma from GitHub..."
-cd "$TEMP_BUILD_DIR"
-if ! git clone https://github.com/adtools/fd2pragma.git; then
-  echo "Failed to clone fd2pragma repository"
-  exit 1
-fi
-
-echo "Compiling fd2pragma..."
-cd fd2pragma
-if ! make; then
-  echo "Failed to compile fd2pragma"
-  exit 1
-fi
-
-# Install fd2pragma binary
-if [ -f fd2pragma ]; then
-  echo "Installing fd2pragma to $PROJECT_PATH/bin..."
-  cp fd2pragma "$PROJECT_PATH/bin/"
-  chmod 755 "$PROJECT_PATH/bin/fd2pragma"
-else
-  echo "WARNING: fd2pragma binary not found after compilation"
-fi
 
 cd "$TEMP_BUILD_DIR"
 
