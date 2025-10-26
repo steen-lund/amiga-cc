@@ -24,9 +24,9 @@ if ! grep -q "export PATH=\"\$VBCC/bin:\$PATH\"" "$SHELL_RC"; then
   echo "Added VBCC/bin to PATH in $SHELL_RC"
 fi
 
-if ! grep -q "export NDK_INCLUDES=\"\$VBCC/NDK_3.2/Include_H\"" "$SHELL_RC"; then
-  echo "export NDK_INCLUDES=\"\$VBCC/NDK_3.2/Include_H\"" >> "$SHELL_RC"
-  echo "Added NDK_3.2/Include_H to NDK_INCLUDES in $SHELL_RC"
+if ! grep -q "export NDK_INCLUDES=\"\$VBCC/NDK/Include_H\"" "$SHELL_RC"; then
+  echo "export NDK_INCLUDES=\"\$VBCC/NDK/Include_H\"" >> "$SHELL_RC"
+  echo "Added NDK/Include_H to NDK_INCLUDES in $SHELL_RC"
   echo "Use -I\$(NDK_INCLUDES) to include the NDK headers in your compiler flags"
 fi
 

@@ -10,10 +10,11 @@ fi
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# TOOLCHAIN SECTION
-
 # Set the installation path
 PROJECT_PATH="/opt/vbcc"
+
+export VBCC="$PROJECT_PATH"
+export PATH="$VBCC/bin:$PATH"
 
 if ! command -v wget &> /dev/null
 then
@@ -39,151 +40,29 @@ mkdir -p "$PROJECT_PATH"
 
 cd "$TEMP_BUILD_DIR"
 
-# Download packaged to temp dir
-if ! wget -c http://sun.hasenbraten.de/vasm/release/vasm.tar.gz; then
-  echo "Failed to download vasm.tar.gz"
+# BEGIN TOOLCHAIN SECTION
+# Call the separate toolchain installation script
+export TEMP_BUILD_DIR
+export PROJECT_PATH
+export SCRIPT_DIR
+"$SCRIPT_DIR/scripts/install_vbcc_toolchain.sh"
+if [ $? -ne 0 ]; then
+  echo "Toolchain installation failed!"
   exit 1
 fi
+# END TOOLCHAIN SECTION
 
-if ! wget -c http://sun.hasenbraten.de/vlink/release/vlink.tar.gz; then
-  echo "Failed to download vlink.tar.gz"
+# BEGIN NDK SECTION
+# Call the separate NDK installation script
+export PROJECT_PATH
+export SCRIPT_DIR
+export VBCC
+"$SCRIPT_DIR/scripts/install_ndk.sh"
+if [ $? -ne 0 ]; then
+  echo "NDK installation failed!"
   exit 1
 fi
-
-if ! git clone https://github.com/steen-lund/vbcc.git; then
-  echo "Failed to clone vbcc repository"
-  exit 1
-fi
-
-if ! wget -c http://phoenix.owl.de/vbcc/current/vbcc_target_m68k-amigaos.lha; then
-  echo "Failed to download vbcc_target_m68k-amigaos.lha"
-  exit 1
-fi
-
-if ! wget -c http://phoenix.owl.de/vbcc/current/vbcc_target_ppc-warpos.lha; then
-  echo "Failed to download vbcc_target_ppc-warpos.lha"
-  exit 1
-fi
-
-if ! wget -c http://phoenix.owl.de/vbcc/current/vbcc_unix_config.tar.gz; then
-  echo "Failed to download vbcc_unix_config.tar.gz"
-  exit 1
-fi
-
-if ! wget -c https://aminet.net/dev/c/vbcc_PosixLib.lha; then
-  echo "Failed to download vbcc_PosixLib.lha"
-  exit 1
-fi
-
-# Enter vbcc clone
-cd vbcc
-
-if [ ! -d bin ]; then
-  mkdir bin
-fi
-
-# Build vbcc compiler(s) for m68k
-make TARGET=m68k
-
-# Build vbcc compiler(s) for PPC
-make TARGET=ppc
-
-# Copy compiled binaries to PROJECT PATH
-cp -r bin "$PROJECT_PATH/"
-
-# Exit vbcc clone, we are now back in TEMP_BUILD_DIR
-cd ..
-
-export VBCC="$PROJECT_PATH"
-export PATH="$VBCC/bin:$PATH"
-
-# Extract and build vasm
-tar zxvf vasm.tar.gz
-cd vasm
-
-# Build vasm for m68k
-make CPU=m68k SYNTAX=mot
-cp vasmm68k_mot vobjdump "$VBCC/bin"
-
-# Build vasm for ppc as well
-make CPU=ppc SYNTAX=std
-cp vasmppc_std "$VBCC/bin"
-
-# Exit vasm folder, we are now back in the TEMP_BUILD_DIR
-cd ..
-
-# Extract and build vlink
-tar zxvf vlink.tar.gz
-cd vlink
-make
-cp vlink "$VBCC/bin"
-# Exit vlink folder, we are now back in the TEMP_BUILD_DIR
-cd ..
-
-# Install the target configs, includes and libs for m68k Amiga OS
-lha x vbcc_target_m68k-amigaos.lha
-cp -r vbcc_target_m68k-amigaos/* "$PROJECT_PATH/"
-
-# Install the target configs, includes and libs for PPC WarpOS
-lha x vbcc_target_ppc-warpos.lha
-cp -r vbcc_target_ppc-warpos/* "$PROJECT_PATH/"
-
-# This actually overwrites all configs with config files adapter for a "unix" environment
-# i.e no Amiga path name conventions and relies on VBCC env var
-cd "$PROJECT_PATH"
-tar zxvf "$TEMP_BUILD_DIR/vbcc_unix_config.tar.gz"
-cd "$TEMP_BUILD_DIR"
-
-# Install the posix support for vbcc
-lha x vbcc_PosixLib.lha
-mkdir "$PROJECT_PATH/targets/posix"
-cd vbcc_PosixLib
-cp -r include "$PROJECT_PATH/targets/posix"
-cp AmigaOS3/posix.lib "$PROJECT_PATH/targets/m68k_amigaos/lib/posix.lib"
-cp WarpOS/posix.lib "$PROJECT_PATH/targets/ppc_warpos/lib/posix.lib"
-cp "$SCRIPT_DIR/posix_configs/*" "$PROJECT_PATH/config/"
-cd ..
-
-# END TOOLCHAIN
-
-# NDK SECTION
-cd "$VBCC"
-
-if [ ! -d NDK_3.2 ]; then
-  mkdir NDK_3.2
-fi
-
-cd NDK_3.2
-
-if ! wget -c http://aminet.net/dev/misc/NDK3.2.lha; then
-  echo "Failed to download NDK3.2.lha"
-  exit 1
-fi
-
-lha x NDK3.2.lha
-
-# Apply WarpOS/PPC patch to compiler-specific.h
-echo "Applying WarpOS/PPC patch to NDK compiler-specific.h..."
-PATCH_FILE="$SCRIPT_DIR/compiler-specific.h.patch"
-if [ -f "$PATCH_FILE" ]; then
-  echo "Found patch file: $PATCH_FILE"
-  if [ -f Include_H/clib/compiler-specific.h ]; then
-    cd Include_H/clib
-    echo "Applying patch to $(pwd)/compiler-specific.h"
-    if patch -p0 < "$PATCH_FILE" 2>&1; then
-      echo "Patch applied successfully"
-    else
-      echo "WARNING: Failed to apply compiler-specific.h patch"
-    fi
-    cd ../..
-  else
-    echo "WARNING: Include_H/clib/compiler-specific.h not found"
-  fi
-else
-  echo "WARNING: compiler-specific.h.patch not found at $PATCH_FILE"
-fi
-
-#END NDK SECTION
+# END NDK SECTION
 
 rm -rf "$TEMP_BUILD_DIR"
 
