@@ -34,7 +34,7 @@ fi
 
 # Apply WarpOS/PPC patch to compiler-specific.h
 echo "Applying WarpOS/PPC patch to NDK compiler-specific.h..."
-PATCH_FILE="$SCRIPT_DIR/compiler-specific.h.patch"
+PATCH_FILE="$SCRIPT_DIR/patches/compiler-specific.h.patch"
 if [ -f "$PATCH_FILE" ]; then
   echo "Found patch file: $PATCH_FILE"
   if [ -f Include_H/clib/compiler-specific.h ]; then
