@@ -64,16 +64,29 @@ if [ $? -ne 0 ]; then
 fi
 # END NDK SECTION
 
-rm -rf "$TEMP_BUILD_DIR"
 
 # Create local directories for additional Amiga developer files
 echo "Creating local directories for additional developer files..."
 mkdir -p "$PROJECT_PATH/local/Include_h"
-mkdir -p "$PROJECT_PATH/local/lib"
 
 echo "Local directories created:"
 echo "  - $PROJECT_PATH/local/Include_h (for additional header files)"
-echo "  - $PROJECT_PATH/local/lib (for additional libraries)"
+
+# install zlib
+"$SCRIPT_DIR/scripts/install_zlib.sh"
+if [ $? -ne 0 ]; then
+  echo "zlib installation failed!"
+  exit 1
+fi
+
+# install libpng
+# install WarpOS
+# install Warp3D
+# install MiniGL
+
+
+rm -rf "$TEMP_BUILD_DIR"
+
 
 # Download and install libpng
 echo "Downloading libpng from aminet..."
