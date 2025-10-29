@@ -25,7 +25,7 @@ mkdir -p "$NDK_TEMP_DIR"
 # Extract NDK to the temp subfolder
 echo "Extracting NDK to temporary directory..."
 cd "$NDK_TEMP_DIR"
-if ! lha x "$TEMP_BUILD_DIR/NDK3.2.lha"; then
+if ! lha xq "$TEMP_BUILD_DIR/NDK3.2.lha"; then
   echo "Failed to extract NDK3.2.lha"
   exit 1
 fi

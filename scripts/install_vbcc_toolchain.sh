@@ -88,11 +88,11 @@ cp vlink "$VBCC/bin"
 cd ..
 
 # Install the target configs, includes and libs for m68k Amiga OS
-lha x vbcc_target_m68k-amigaos.lha
+lha xq vbcc_target_m68k-amigaos.lha
 cp -r vbcc_target_m68k-amigaos/* "$PROJECT_PATH/"
 
 # Install the target configs, includes and libs for PPC WarpOS
-lha x vbcc_target_ppc-warpos.lha
+lha xq vbcc_target_ppc-warpos.lha
 cp -r vbcc_target_ppc-warpos/* "$PROJECT_PATH/"
 
 # This actually overwrites all configs with config files adapter for a "unix" environment
@@ -102,7 +102,7 @@ tar zxvf "$TEMP_BUILD_DIR/vbcc_unix_config.tar.gz"
 cd "$TEMP_BUILD_DIR"
 
 # Install the posix support for vbcc
-if ! lha x vbcc_PosixLib.lha; then
+if ! lha xq vbcc_PosixLib.lha; then
   echo "Failed to extract vbcc_PosixLib.lha"
   exit 1
 fi
