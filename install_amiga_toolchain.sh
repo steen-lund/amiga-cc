@@ -67,10 +67,10 @@ fi
 
 # Create local directories for additional Amiga developer files
 echo "Creating local directories for additional developer files..."
-mkdir -p "$PROJECT_PATH/local/Include_h"
+mkdir -p "$PROJECT_PATH/local/Include_H"
 
 echo "Local directories created:"
-echo "  - $PROJECT_PATH/local/Include_h (for additional header files)"
+echo "  - $PROJECT_PATH/local/Include_H (for additional header files)"
 
 # install zlib
 "$SCRIPT_DIR/scripts/install_zlib.sh"

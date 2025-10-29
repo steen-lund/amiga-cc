@@ -117,13 +117,13 @@ else
 fi
 
 if [ -f AmigaOS3/posix.lib ]; then
-  cp AmigaOS3/posix.lib "$PROJECT_PATH/targets/m68k_amigaos/lib/posix.lib"
+  cp AmigaOS3/posix.lib "$PROJECT_PATH/targets/m68k-amigaos/lib/posix.lib"
 else
   echo "WARNING: AmigaOS3/posix.lib not found"
 fi
 
 if [ -f WarpOS/posix.lib ]; then
-  cp WarpOS/posix.lib "$PROJECT_PATH/targets/ppc_warpos/lib/posix.lib"
+  cp WarpOS/posix.lib "$PROJECT_PATH/targets/ppc-warpos/lib/posix.lib"
 else
   echo "WARNING: WarpOS/posix.lib not found"
 fi

@@ -48,7 +48,7 @@ fi
 # Copy m68k library
 if [ -f z.lib ]; then
   echo "Installing m68k zlib library..."
-  cp z.lib "$VBCC/targets/m68k_amigaos/lib/z.lib"
+  cp z.lib "$VBCC/targets/m68k-amigaos/lib/z.lib"
 else
   echo "ERROR: m68k z.lib not found after build"
   exit 1
@@ -63,13 +63,13 @@ cd ..
 # Copy header files
 echo "Installing zlib header files..."
 if [ -f zlib.h ]; then
-  cp zlib.h "$PROJECT_PATH/local/Include_h/zlib.h"
+  cp zlib.h "$PROJECT_PATH/local/Include_H/zlib.h"
 else
   echo "WARNING: zlib.h not found"
 fi
 
 if [ -f zconf.h ]; then
-  cp zconf.h "$PROJECT_PATH/local/Include_h/zconf.h"
+  cp zconf.h "$PROJECT_PATH/local/Include_H/zconf.h"
 else
   echo "WARNING: zconf.h not found"
 fi
